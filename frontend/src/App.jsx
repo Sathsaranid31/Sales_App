@@ -9,38 +9,42 @@ const TABS = [
   { id: "grid", label: "Sales Grid" },
   { id: "chat", label: "AI Analysis" },
 ];
- 
+
 function Dashboard() {
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState("grid");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-      
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh",
+      overflow: "hidden",
+      fontFamily: "Arial, sans-serif"   // ✅ ERP style font
+    }}>
+
       {/* Header */}
       <Header />
 
       {/* Tabs */}
       <div style={{
-        background: "#2a4a7f",
+        background: "#2c5282",
         display: "flex",
         gap: 2,
-        padding: "4px 14px 0",
-        flexShrink: 0
+        padding: "4px 10px 0",
+        borderBottom: "1px solid #ccc"
       }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: "5px 16px",
-              fontSize: 11.5,
-              fontWeight: 600,
+              padding: "6px 14px",
+              fontSize: 12,
               cursor: "pointer",
-              border: "none",
-              borderRadius: "4px 4px 0 0",
-              background: activeTab === tab.id ? "#fff" : "transparent",
-              color: activeTab === tab.id ? "#1a365d" : "#b0c4de",
-              transition: "all .15s",
+              border: "1px solid #ccc",
+              borderBottom: activeTab === tab.id ? "none" : "1px solid #ccc",
+              background: activeTab === tab.id ? "#fff" : "#e6e6e6",
+              color: "#000",
             }}
           >
             {tab.label}
@@ -49,22 +53,39 @@ function Dashboard() {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", background: "#fff" }}>
-        {activeTab === "grid" && (
-          <OrdersGrid onClose={() => setActiveTab("chat")} />
-        )}
+      <div style={{
+        flex: 1,
+        overflow: "auto",
+        background: "#fff",
+        borderTop: "none"
+      }}>
+        {activeTab === "grid" && <OrdersGrid />}
         {activeTab === "chat" && <ChatWindow />}
       </div>
     </div>
   );
 }
 
-
 function AppRouter() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // ✅ Simple ERP-style loading
+  if (loading) {
+    return (
+      <div style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Arial"
+      }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return user ? <Dashboard /> : <AuthPage />;
 }
-
 
 export default function App() {
   return (

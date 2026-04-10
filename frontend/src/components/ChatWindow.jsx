@@ -1,16 +1,27 @@
 import React, { useRef, useEffect, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import PresetPrompts from "./PresetPrompts";
+import WelcomeScreen from "./WelcomeScreen";
 import { useChat } from "../hooks/useChat";
 
 export default function ChatWindow() {
-  const { messages, loading, sendMessage } = useChat();
+  const { messages, loading, chatStarted, sendMessage, resetChat } = useChat();
+
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
+  const inputRef = useRef(null);
 
+  // ✅ Auto scroll to latest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // ✅ Auto focus input after chat starts
+  useEffect(() => {
+    if (chatStarted) {
+      inputRef.current?.focus();
+    }
+  }, [chatStarted]);
 
   const handleSend = () => {
     if (!input.trim() || loading) return;
@@ -25,56 +36,100 @@ export default function ChatWindow() {
     }
   };
 
+  // ───────────── WELCOME SCREEN ─────────────
+  if (!chatStarted) {
+    return (
+      <WelcomeScreen
+        onSend={(q) => {
+          sendMessage(q); // ✅ triggers chatStarted inside hook
+        }}
+      />
+    );
+  }
+
+  // ───────────── CHAT UI ─────────────
   return (
-    <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+    <div style={{
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden"
+    }}>
 
-      {/* Preset prompt bar */}
-      <PresetPrompts onSelect={(q) => { sendMessage(q); }} />
+      {/* Preset prompts */}
+      <PresetPrompts onSelect={(q) => sendMessage(q)} />
 
-      {/* Message list */}
-      <div style={{ flex:1, overflowY:"auto", padding:"14px 16px 8px" }}>
+      {/* Top bar with reset */}
+      <div style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        padding: "6px 14px",
+        borderBottom: "1px solid #e0e0e0",
+        background: "#f5f5f5"
+      }}>
+        <button
+          onClick={() => {
+            resetChat();
+            setInput(""); // ✅ clear input
+          }}
+          style={{
+            padding: "4px 12px",
+            fontSize: 12,
+            border: "1px solid #ccc",
+            background: "#fff",
+            cursor: "pointer"
+          }}
+        >
+          New Chat
+        </button>
+      </div>
+
+      {/* Messages */}
+      <div style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "12px"
+      }}>
         {messages.map((msg) => (
           <MessageBubble key={msg.id} msg={msg} />
         ))}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar */}
+      {/* Input */}
       <div style={{
-        padding:"10px 14px",
-        borderTop:"1px solid #e8e2d8",
-        background:"#faf8f4",
-        display:"flex", gap:8, alignItems:"flex-end",
-        flexShrink:0,
+        padding: "10px",
+        borderTop: "1px solid #ccc",
+        display: "flex",
+        gap: 8
       }}>
         <textarea
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="Ask about sales, customers, top items, open orders…"
+          placeholder="Type your message..."
           rows={1}
           style={{
-            flex:1, resize:"none", padding:"9px 12px", fontSize:13,
-            border:"1px solid #c8c0b0", borderRadius:8, outline:"none",
-            background:"#fff", fontFamily:"inherit", lineHeight:1.5,
-            minHeight:38, maxHeight:100, overflowY:"auto",
-            transition:"border-color .15s",
+            flex: 1,
+            padding: 8,
+            border: "1px solid #ccc",
+            resize: "none"
           }}
-          onFocus={(e)  => e.target.style.borderColor = "#1a5fa5"}
-          onBlur={(e)   => e.target.style.borderColor = "#c8c0b0"}
         />
+
         <button
           onClick={handleSend}
           disabled={!input.trim() || loading}
           style={{
-            padding:"9px 20px", fontSize:13, fontWeight:700,
-            background: !input.trim() || loading ? "#b0b8c4" : "#1a5fa5",
-            color:"#fff", border:"none", borderRadius:8,
-            cursor: !input.trim() || loading ? "not-allowed" : "pointer",
-            minHeight:38, whiteSpace:"nowrap", transition:"background .2s",
+            padding: "8px 16px",
+            background: !input.trim() || loading ? "#aaa" : "#2c5282",
+            color: "#fff",
+            border: "none",
+            cursor: !input.trim() || loading ? "not-allowed" : "pointer"
           }}
         >
-          {loading ? "…" : "Send"}
+          {loading ? "..." : "Send"}
         </button>
       </div>
     </div>
